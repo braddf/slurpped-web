@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .text-underline-primary {
+    @apply underline decoration-mangetout decoration-4 underline-offset-10 !leading-[3rem];
+  }
+
+  .btn-primary {
+    @apply border-2 border-mangetout text-mangetout rounded-full px-4 py-1 transition-all shadow-mangetout hover:shadow-solid hover:shadow-mangetout hover:-translate-y-[2px];
+  }
+
+  .admin-btn-primary {
+    @apply btn-primary bg-sweetcorn text-soil border-sweetcorn shadow-carrot hover:shadow-solid hover:shadow-carrot hover:-translate-y-[2px];
+  }
+
+  .admin-btn-outline {
+    @apply btn-outline;
+  }
+
+  .btn-outline {
+    @apply border-2 border-soil rounded-full px-4 py-1 transition-all shadow-[0_0_0_rgb(0,0,0)] hover:shadow-solid hover:-translate-y-[2px];
+  }
+
+  .dotted-image-box-carrot {
+    @apply relative border-carrot rounded-3xl border-2 border-dashed relative p-3;
+  }
+
+  .text-input {
+    @apply border border-newTrowel rounded-full px-3 py-1;
+  }
+
+  .checkbox-input {
+    @apply border border-newTrowel rounded-full accent-sweetcorn h-5 w-5 text-sweetcorn;
+  }
+
+  .wiggle-background {
+    @apply bg-rainwater;
+  }
+
+  .rich-text p {
+    @apply mb-6;
+  }
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+}
+
+main a:not([class*=btn]) {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 2px;
+  text-decoration-color: #008033;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    color: white;
+    background: black;
+  }
+}
+
+.wiggle-background {
+  background-image: url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23432412' fill-opacity='0.04'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Stripe Demo CSS */
+
+/*section {*/
+/*  background: #ffffff;*/
+/*  display: flex;*/
+/*  flex-direction: column;*/
+/*  width: 400px;*/
+/*  height: 112px;*/
+/*  border-radius: 6px;*/
+/*  justify-content: space-between;*/
+/*}*/
+/*.product {*/
+/*  display: flex;*/
+/*  flex: 1;*/
+/*}*/
+/*.description {*/
+/*  display: flex;*/
+/*  flex-direction: column;*/
+/*  justify-content: center;*/
+/*}*/
+/*p {*/
+/*  font-style: normal;*/
+/*  font-weight: 500;*/
+/*  font-size: 14px;*/
+/*  line-height: 20px;*/
+/*  letter-spacing: -0.154px;*/
+/*  color: #242d60;*/
+/*  height: 100%;*/
+/*  width: 100%;*/
+/*  padding: 0 20px;*/
+/*  display: flex;*/
+/*  align-items: center;*/
+/*  justify-content: center;*/
+/*  box-sizing: border-box;*/
+/*}*/
+/*img, svg {*/
+/*  border-radius: 6px;*/
+/*  margin: 10px;*/
+/*  width: 54px;*/
+/*  height: 57px;*/
+/*}*/
+/*h3,*/
+/*h5 {*/
+/*  font-style: normal;*/
+/*  font-weight: 500;*/
+/*  font-size: 14px;*/
+/*  line-height: 20px;*/
+/*  letter-spacing: -0.154px;*/
+/*  color: #242d60;*/
+/*  margin: 0;*/
+/*}*/
+/*h5 {*/
+/*  opacity: 0.5;*/
+/*}*/
+/*!*button {*!*/
+/*!*  height: 36px;*!*/
+/*!*  background: #556cd6;*!*/
+/*!*  color: white;*!*/
+/*!*  width: 100%;*!*/
+/*!*  font-size: 14px;*!*/
+/*!*  border: 0;*!*/
+/*!*  font-weight: 500;*!*/
+/*!*  cursor: pointer;*!*/
+/*!*  letter-spacing: 0.6px;*!*/
+/*!*  border-radius: 0 0 6px 6px;*!*/
+/*!*  transition: all 0.2s ease;*!*/
+/*!*  box-shadow: 0px 4px 5.5px 0px rgba(0, 0, 0, 0.07);*!*/
+/*!*}*!*/
+/*button:hover {*/
+/*  opacity: 0.8;*/
+/*}*/

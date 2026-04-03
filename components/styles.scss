@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+:root {
+    --gray-300: #d1d5db;
+}
+
+body {
+    background: theme('colors.rainwater');
+}
+
+body * {
+    font-family: 'Poppins', sans-serif;
+    color: theme('colors.soil.DEFAULT');
+}
+
+p, img {
+    margin: 0.25rem 0;
+}
+
+p {
+    min-height: 1.5rem;
+}
+
+blockquote {
+    border-left: 0.25rem solid var(--gray-300);
+    padding: 0.5rem 0 0.5rem 1rem;
+    margin: 0.25rem 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: bold;
+}
+
+h1 {
+    font-size: 2.5rem;
+}
+
+h2 {
+    font-size: 2rem;
+}
+
+h3 {
+    font-size: 1.8rem;
+}
+
+h4 {
+    font-size: 1.5rem;
+}
+
+h5 {
+    font-size: 1.33rem;
+}
+
+h6 {
+    font-size: 1.25rem;
+}
+
+.header {
+    ul {
+        display: flex;
+        list-style: none;
+        margin-left: 0;
+        padding-left: 0;
+    }
+
+    li {
+        margin: 0 -0.5rem 0 2.5rem;
+        display: flex;
+        //padding: 0.5rem;
+    }
+
+    li:first-child {
+        margin-left: auto;
+    }
+
+    a {
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+    }
+
+    a img {
+        margin-right: 1em;
+    }
+}
+
+.content {
+    margin: 2rem 0 4rem;
+}
+
+.rich-text {
+    ol {
+        list-style: decimal;
+        margin-left: 0.75rem;
+        li {
+            padding: 0 0 1rem 1rem;
+        }
+    }
+}
+
+.shake {
+    animation: shake 0.5s;
+    animation-iteration-count: 1;
+}
+
+@keyframes shake {
+    10%, 90% {
+        rotate: -1deg;
+        //transform: rotateY(-1deg);
+    }
+
+    20%, 80% {
+        //transform: rotateY(-20deg);
+        rotate: -2deg;
+    }
+
+    30%, 50%, 70% {
+        //transform: rotateY(20deg);
+        rotate: 2deg;
+    }
+
+    40%, 60% {
+        //transform: rotateY(1deg);
+        rotate: 10deg;
+    }
+}
+

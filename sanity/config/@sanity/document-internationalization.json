@@ -1,0 +1,15 @@
+{
+    "base": "en-gb",
+    "idStructure": "delimiter",
+    "referenceBehavior": "strong",
+    "languages": [
+        {
+            "title": "English (UK)",
+            "id": "en-gb"
+        },
+        {
+            "title": "Dutch (NL)",
+            "id": "nl-nl"
+        }
+    ]
+}
