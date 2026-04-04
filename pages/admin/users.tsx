@@ -5,7 +5,7 @@ import { getCookies } from "cookies-next";
 import Order from "../../models/Order";
 import { withIronSessionSsr } from "iron-session/next";
 import sessionOptions from "../../lib/session";
-import { debounce } from "underscore";
+import { debounce } from "lodash";
 import User from "../../models/User";
 import { LoadingSpinner } from "../../components/icons";
 import HeaderMenu from "../../components/admin/HeaderMenu";

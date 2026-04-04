@@ -8,8 +8,8 @@ import imageUrlBuilder from "@sanity/image-url";
 
 export default function PolicyPage({ page }: { page: PolicyPage }) {
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN
     // useCdn: true,
@@ -30,8 +30,8 @@ export default function PolicyPage({ page }: { page: PolicyPage }) {
 
 export const getServerSideProps = async (context: NextPageContext) => {
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN
     // useCdn: true,
@@ -39,7 +39,7 @@ export const getServerSideProps = async (context: NextPageContext) => {
 
   const language = getCookies(context)["groentetas/lang"] || "en-gb";
 
-  const query = `*[_type in ["policy-page"] && slug == "${context.query?.slug}" && __i18n_lang == "${language}"][0]`;
+  const query = `*[_type in ["policy-page"] && slug == "${context.query?.slug}"][0]`;
   let page: any;
   await client.fetch(query).then((p: PolicyPage) => {
     page = p;

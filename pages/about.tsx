@@ -11,8 +11,8 @@ const About: NextPage<IAboutPage> = (page) => {
   console.log("About page");
   console.log("page", page);
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN
     // useCdn: true,
@@ -68,8 +68,8 @@ export default About;
 
 export const getServerSideProps = async (context: NextPageContext) => {
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN
     // useCdn: true,
@@ -77,7 +77,7 @@ export const getServerSideProps = async (context: NextPageContext) => {
 
   const language = getCookies(context)["groentetas/lang"] || "en-gb";
 
-  const query = `*[_type == "about-page" && __i18n_lang == "${language}"]`;
+  const query = `*[_type == "about-page"]`;
 
   let page: any;
   await client.fetch(query).then((pages: IAboutPage[]) => {

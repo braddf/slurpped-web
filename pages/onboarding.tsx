@@ -2,7 +2,6 @@ import React, { FormEvent, useState } from "react";
 import useUser from "../lib/useUser";
 import Form from "../components/Form";
 import fetchJson, { FetchError } from "../lib/fetchJson";
-import { Magic } from "magic-sdk";
 import { useRouter } from "next/router";
 
 export default function Login() {

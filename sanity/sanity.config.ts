@@ -5,9 +5,9 @@ import { deskTool } from "sanity/desk";
 import schemas from "./schemas/schema";
 
 export default defineConfig({
-  name: "green-pelican",
-  title: "Groentetas",
-  projectId: "lrkfr7go",
+  name: "slurppd",
+  title: "Slurpp'd",
+  projectId: "yqt1jtan",
   dataset: "production",
   plugins: withDocumentI18nPlugin([deskTool(), table()], {
     base: "en-gb",

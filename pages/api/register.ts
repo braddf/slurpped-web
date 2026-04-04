@@ -1,4 +1,3 @@
-import { Magic } from "@magic-sdk/admin";
 import { withIronSessionApiRoute } from "iron-session/next";
 import sessionOptions from "../../lib/session";
 import { NextApiRequest, NextApiResponse } from "next";
@@ -7,11 +6,10 @@ import fetchJson from "../../lib/fetchJson";
 import User from "../../models/User";
 import { Model } from "objection";
 import connectionHandler from "../../lib/connection-handler";
-import knex from "knex";
 import * as Sentry from "@sentry/nextjs";
+import Stripe from "stripe";
 
-const magic = new Magic(process.env.MAGIC_SECRET_KEY);
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-02-24.acacia" });
 
 // eslint-disable-next-line consistent-return
 async function registerRoute(req: NextApiRequestWithDB, res: NextApiResponse) {

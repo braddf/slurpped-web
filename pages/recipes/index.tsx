@@ -62,8 +62,8 @@ export default function Recipes(page: IRecipesPage & { recipes: Recipe[] }) {
 
 export const Recipe = ({ recipe }: { recipe: Recipe }) => {
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN
     // useCdn: true,
@@ -102,8 +102,8 @@ export const Recipe = ({ recipe }: { recipe: Recipe }) => {
 
 export const getServerSideProps = async (context: NextPageContext) => {
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN,
     useCdn: true
@@ -111,7 +111,7 @@ export const getServerSideProps = async (context: NextPageContext) => {
 
   const language = getCookies(context)["groentetas/lang"] || "en-gb";
 
-  const query = `*[_type in ["recipes-page", "recipe"] && __i18n_lang == "${language}"]`;
+  const query = `*[_type in ["recipes-page", "recipe"]]`;
 
   let page: any;
   let recipes: any[] = [];

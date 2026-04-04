@@ -102,8 +102,8 @@ const Home: NextPage<HomeProps> = ({
 }) => {
   const { user } = useUser();
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN
     // useCdn: true,
@@ -548,24 +548,22 @@ const Home: NextPage<HomeProps> = ({
 
 export const getServerSideProps = async (context: NextPageContext) => {
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN,
     useCdn: true
   });
   const session = await getIronSession(context.req!, context.res!, {
-    cookieName: "iron-session/groentetas",
+    cookieName: "iron-session/slurppd",
     password: process.env.SECRET_COOKIE_PASSWORD || ""
   });
 
-  const language = getCookies(context)["groentetas/lang"] || "en-gb";
-
-  const query = `*[_type == "home-page" && __i18n_lang == "${language}"]`;
-  const blogQuery = `*[_type == "blog-post" && __i18n_lang == "${language}"] | order(publishedAt desc) [0..2]`;
-  const recipeQuery = `*[_type == "recipe" && __i18n_lang == "${language}"] | order(publishedAt desc) [0..3]`;
-  const partnersQuery = `*[_type == "partners-page" && __i18n_lang == "${language}"][0]`;
-  const locationQuery = `*[_type == "location" && __i18n_lang == "${language}"]`;
+  const query = `*[_type == "home-page"][0]`;
+  const blogQuery = `*[_type == "blog-post"] | order(publishedAt desc) [0..2]`;
+  const recipeQuery = `*[_type == "recipe"] | order(publishedAt desc) [0..3]`;
+  const partnersQuery = `*[_type == "partners-page"][0]`;
+  const locationQuery = `*[_type == "location"]`;
   // const params = { slug: context.query.slug };
   type IPage = {
     title: string;
@@ -574,32 +572,23 @@ export const getServerSideProps = async (context: NextPageContext) => {
     content: unknown[];
   };
 
-  let homePage: IPage = { title: "", subtitle: "", heroBtnText: "", content: [] };
-  await client.fetch(query).then((page: IPage[]) => {
-    homePage = page[0];
-    // console.log("infoPage", infoPage);
-  });
+  const homePage: IPage = (await client.fetch(query)) || {
+    title: "",
+    subtitle: "",
+    heroBtnText: "",
+    content: []
+  };
   const blogPosts = await client.fetch(blogQuery);
   const recipes = await client.fetch(recipeQuery);
   const partnersPage: PartnersPage = await client.fetch(partnersQuery);
   const locations = await client.fetch(locationQuery);
-  if (!homePage?.title) {
-    return {
-      notFound: true
-    };
-  }
   return {
     props: {
-      // title: homePage.title,
-      // subtitle: homePage.subtitle,
-      // heroBtnText: homePage.heroBtnText,
-      // content: homePage.content
-      // content: "true"
       ...homePage,
-      blogPosts,
-      recipes,
-      partnersPage,
-      locations
+      blogPosts: blogPosts || [],
+      recipes: recipes || [],
+      partnersPage: partnersPage || null,
+      locations: locations || []
     }
   };
 };

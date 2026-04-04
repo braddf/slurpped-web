@@ -1,10 +1,9 @@
 import { NextApiHandler } from "next";
 import { withIronSessionApiRoute } from "iron-session/next";
 import sessionOptions from "../../lib/session";
+import Stripe from "stripe";
 
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-
-const YOUR_DOMAIN = "http://localhost:3000/order";
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-02-24.acacia" });
 
 const subscribe: NextApiHandler = withIronSessionApiRoute(async (req, res) => {
   console.log("req.body", req.body);

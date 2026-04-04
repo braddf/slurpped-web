@@ -13,8 +13,8 @@ export default function News(post: BlogPost) {
   console.log("BlogPost page");
   console.log("post", post);
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN
     // useCdn: true,
@@ -111,8 +111,8 @@ export default function News(post: BlogPost) {
 export const getServerSideProps = async (context: NextPageContext) => {
   console.log("getServerside context", context);
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN
     // useCdn: true,
@@ -120,7 +120,7 @@ export const getServerSideProps = async (context: NextPageContext) => {
 
   const language = getCookies(context)["groentetas/lang"] || "en-gb";
 
-  const query = `*[_type in ["blog-post"] && slug == "${context.query?.slug}" && __i18n_lang == "${language}"][0]{
+  const query = `*[_type in ["blog-post"] && slug == "${context.query?.slug}"][0]{
     ...,
     featuredRecipe->
   }`;

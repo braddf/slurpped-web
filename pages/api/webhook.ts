@@ -4,7 +4,7 @@ import Stripe from "stripe";
 import * as Sentry from "@sentry/nextjs";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2022-08-01"
+  apiVersion: "2025-02-24.acacia"
 });
 const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_API_KEY || ""
@@ -84,8 +84,8 @@ const webhookRoute = async (req: NextApiRequestWithDB, res: NextApiResponse) => 
 
       const { firstName } = user;
       const client = createClient({
-        projectId: "lrkfr7go",
-        dataset: "production",
+        projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+        dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
         apiVersion: "2021-10-21",
         token: process.env.SANITY_BOT_TOKEN
         // useCdn: true,
@@ -97,12 +97,15 @@ const webhookRoute = async (req: NextApiRequestWithDB, res: NextApiResponse) => 
         ? `${location.availableFrom} - ${location.availableTo}`
         : "";
 
-      const sentFrom = new Sender("info@groentetasutrecht.nl", "Groentetas");
+      const sentFrom = new Sender(
+        process.env.MAILERSEND_FROM_EMAIL || "info@slurppd.co.uk",
+        process.env.NEXT_PUBLIC_BRAND_NAME || "Slurpp'd"
+      );
       const collectionDate = new Date(Number(sess.metadata.collectionDate));
       const collectionLocation = location?.longName || sess.metadata.collectionLocation;
       const directionsLink = location?.directionsLink || "https://goo.gl/maps";
       const quantity = sess.metadata.quantity || 1;
-      const productName = sess.metadata.product || sess.metadata.tas || "Groentetas";
+      const productName = sess.metadata.product || "";
       const orderItems = JSON.parse(sess.metadata.items || "[]");
       const notes = sess.metadata.notes || "";
 
@@ -150,7 +153,7 @@ const webhookRoute = async (req: NextApiRequestWithDB, res: NextApiResponse) => 
             },
             {
               var: "support_email",
-              value: "info@groentetasutrecht.nl"
+              value: process.env.MAILERSEND_FROM_EMAIL || "info@slurppd.co.uk"
             },
             {
               var: "collection_date",

@@ -3,8 +3,9 @@ import { withIronSessionApiRoute } from "iron-session/next";
 import sessionOptions from "../../lib/session";
 import * as Sentry from "@sentry/nextjs";
 import { OrderItem } from "../../types";
+import Stripe from "stripe";
 
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-02-24.acacia" });
 
 type CheckoutItem = OrderItem & { name: string; stripeProductId: string; priceInCents: number };
 

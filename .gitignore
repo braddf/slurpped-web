@@ -40,3 +40,8 @@ next-env.d.ts
 
 # Sentry
 .sentryclirc
+
+# Sanity
+sanity/dist/
+sanity/.sanity/
+sanity/*.tar.gz

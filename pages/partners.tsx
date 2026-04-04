@@ -9,8 +9,8 @@ import { getRandomVeggie } from "../components/icons";
 
 const PartnersPage: NextPage<IPartnersPage> = (page) => {
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN,
     useCdn: true
@@ -72,8 +72,8 @@ export default PartnersPage;
 
 export const getServerSideProps = async (context: NextPageContext) => {
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN
     // useCdn: true,
@@ -81,7 +81,7 @@ export const getServerSideProps = async (context: NextPageContext) => {
 
   const language = getCookies(context)["groentetas/lang"] || "en-gb";
 
-  const query = `*[_type == "partners-page" && __i18n_lang == "${language}"][0]`;
+  const query = `*[_type == "partners-page"][0]`;
 
   let page: any;
   await client.fetch(query).then((p: IPartnersPage) => {

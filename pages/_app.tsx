@@ -88,8 +88,8 @@ function MyApp({
 MyApp.getInitialProps = async (context: AppContext) => {
   const appContext = App.getInitialProps(context);
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN,
     useCdn: true
@@ -97,8 +97,8 @@ MyApp.getInitialProps = async (context: AppContext) => {
 
   const language = getCookies(context.ctx)["groentetas/lang"] || "en-gb";
 
-  const settingsQuery = `*[_type == "general-settings" && __i18n_lang == "${language}"][0]`;
-  const menuQuery = `*[_type == "main-menu" && __i18n_lang == "${language}"]{
+  const settingsQuery = `*[_type == "general-settings"][0]`;
+  const menuQuery = `*[_type == "main-menu"]{
     ...,
     "links": links[].page->{
       _id,

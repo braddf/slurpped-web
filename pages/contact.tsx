@@ -153,8 +153,8 @@ export default function Contact(
 }
 export const getServerSideProps = async (context: NextPageContext) => {
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN
     // useCdn: true,
@@ -162,7 +162,7 @@ export const getServerSideProps = async (context: NextPageContext) => {
 
   const language = getCookies(context)["groentetas/lang"] || "en-gb";
 
-  const query = `*[_type in ["contact-page", "location", "general-settings"] && __i18n_lang == "${language}"]`;
+  const query = `*[_type in ["contact-page", "location", "general-settings"]]`;
 
   let page: any;
   let locations: any;

@@ -37,10 +37,13 @@ async function issueSealedLink(req: NextApiRequest, res: NextApiResponse) {
         <a href="${url}">Let&apos;s go</a>
       </body>
     </html>`;
-    const emailSubject = "Log in to Groentetas";
+    const emailSubject = `Log in to ${process.env.NEXT_PUBLIC_BRAND_NAME || "Slurpp'd"}`;
     const recipients = [new Recipient(email)];
 
-    const sentFrom = new Sender("info@groentetasutrecht.nl", "Groentetas");
+    const sentFrom = new Sender(
+      process.env.MAILERSEND_FROM_EMAIL || "info@slurppd.co.uk",
+      process.env.NEXT_PUBLIC_BRAND_NAME || "Slurpp'd"
+    );
     const emailParams = new EmailParams()
       .setFrom(sentFrom)
       .setTo(recipients)

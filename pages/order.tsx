@@ -559,8 +559,8 @@ export const getServerSideProps = withIronSessionSsr(async ({ req, res }) => {
   //   headers
   // });
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN,
     useCdn: false

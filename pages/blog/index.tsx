@@ -61,8 +61,8 @@ export default function Posts(page: INewsPage & { posts: BlogPost[] }) {
 
 export const Post = ({ post }: { post: BlogPost }) => {
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN
     // useCdn: true,
@@ -99,8 +99,8 @@ export const Post = ({ post }: { post: BlogPost }) => {
 
 export const getServerSideProps = async (context: NextPageContext) => {
   const client = createClient({
-    projectId: "lrkfr7go",
-    dataset: "production",
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
     token: process.env.SANITY_BOT_TOKEN
     // useCdn: true,
@@ -108,7 +108,7 @@ export const getServerSideProps = async (context: NextPageContext) => {
 
   const language = getCookies(context)["groentetas/lang"] || "en-gb";
 
-  const query = `*[_type in ["news-page", "blog-post"] && __i18n_lang == "${language}"] | order(publishDate desc)`;
+  const query = `*[_type in ["news-page", "blog-post"]] | order(publishDate desc)`;
 
   let page: any;
   let posts: any[] = [];
