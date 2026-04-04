@@ -98,6 +98,7 @@ MyApp.getInitialProps = async (context: AppContext) => {
   const language = getCookies(context.ctx)["groentetas/lang"] || "en-gb";
 
   const settingsQuery = `*[_type == "general-settings"][0]`;
+  const productsQuery = `*[_type == "product" && available == true] | order(sortOrder asc)`;
   const menuQuery = `*[_type == "main-menu"]{
     ...,
     "links": links[].page->{
@@ -110,10 +111,17 @@ MyApp.getInitialProps = async (context: AppContext) => {
 
   let generalSettings: any;
   let mainMenu: any;
+  let products: any[] = [];
   try {
     await client.fetch(settingsQuery).then((p: GeneralSettings) => {
       generalSettings = p;
     });
+  } catch (e) {
+    Sentry.captureException(e);
+    console.error(e);
+  }
+  try {
+    products = (await client.fetch(productsQuery)) || [];
   } catch (e) {
     Sentry.captureException(e);
     console.error(e);
@@ -127,14 +135,9 @@ MyApp.getInitialProps = async (context: AppContext) => {
     console.error(e);
   }
 
-  if (!generalSettings?.contactEmail) {
-    return {
-      notFound: true
-    };
-  }
   return {
     ...appContext,
-    generalSettings,
+    generalSettings: { ...generalSettings, products },
     mainMenu
   };
 };

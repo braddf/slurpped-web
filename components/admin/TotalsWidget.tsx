@@ -48,20 +48,20 @@ export const TotalsWidget: React.FC<{ title: string; orders: Order[] }> = ({ tit
       <h3 className="text-xl font-bold mb-3">{title}</h3>
       <div className="grid grid-cols-2 justify-around w-full gap-x-3 gap-y-2">
         {sanityProducts.map((product) => {
-          const qty = sumQuantity(activeOrders, product.slug, product.name);
+          const qty = sumQuantity(activeOrders, product.slug.current, product.name);
           const collected = sumQuantity(
             activeOrders.filter((o) => o.collected),
-            product.slug,
+            product.slug.current,
             product.name
           );
           const uncollected = sumQuantity(
             activeOrders.filter((o) => !o.collected),
-            product.slug,
+            product.slug.current,
             product.name
           );
           return (
             <div
-              key={product.slug}
+              key={product.slug.current}
               className="flex flex-col items-center text-center tracking-wide min-w-[4rem]"
             >
               <span className="text-xs uppercase block leading-tight">{product.name}</span>

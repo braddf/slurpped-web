@@ -2,12 +2,29 @@ import { LocationName, LocationStatus } from "./models/BlockedDate";
 import User from "./models/User";
 
 export type Product = {
+  _id: string;
   name: string;
-  slug: string;
+  slug: { current: string };
   stripeProductId: string;
-  priceInCents: number;
+  stripePriceId?: string;
+  stripeOneOffPriceId?: string;
+  priceInPence: number;
   available: boolean;
   sortOrder?: number;
+  description?: any;
+  allergens?: string[];
+  prepSteps?: any;
+  prepVideo?: string;
+  images?: any[];
+};
+
+export type WeeklySpecial = {
+  _id: string;
+  published: boolean;
+  product: Product;
+  title?: string;
+  specialCopy?: any;
+  specialPrice?: number;
 };
 
 export type OrderItem = {
@@ -23,6 +40,8 @@ export type GeneralSettings = {
   orderButtonText: string;
   showAnnouncementBar: boolean;
   announcementBarText: string;
+  nextWeekTeaser?: string;
+  // Populated separately from product documents, not stored in general-settings
   products: Product[];
 };
 

@@ -33,35 +33,11 @@ export default {
       group: "general"
     },
     {
-      name: "products",
-      type: "array",
-      title: "Products",
-      group: "general",
-      of: [
-        {
-          type: "object",
-          fields: [
-            { name: "name", type: "string", title: "Display Name" },
-            {
-              name: "slug",
-              type: "string",
-              title: "Slug (Stable ID)",
-              description:
-                "Unique identifier stored in orders — must be identical across all languages (e.g. 'groentetas', 'mushrooms'). Never change this after orders have been placed."
-            },
-            { name: "stripeProductId", type: "string", title: "Stripe Product ID (prod_xxx)" },
-            { name: "priceInCents", type: "number", title: "Price (in cents, e.g. 750 = €7.50)" },
-            { name: "available", type: "boolean", title: "Available?", initialValue: true },
-            { name: "sortOrder", type: "number", title: "Sort Order (lower = first)" }
-          ],
-          preview: {
-            select: { title: "name", subtitle: "priceInCents" },
-            prepare({ title, subtitle }) {
-              return { title, subtitle: subtitle != null ? `€${(subtitle / 100).toFixed(2)}` : "" };
-            }
-          }
-        }
-      ]
+      name: "nextWeekTeaser",
+      type: "string",
+      title: "Coming Next Week",
+      description: "Short teaser shown on homepage. Update every Monday as part of SOP 1.",
+      group: "general"
     },
     {
       name: "contactEmail",

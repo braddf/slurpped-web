@@ -79,7 +79,7 @@ const OrderRow: React.FC<{
 }> = ({ order, setOrderCollected, editOrder }) => {
   const settings = useContext(SettingsContext);
   const getProductName = (slug: string) =>
-    settings?.products?.find((p) => p.slug === slug)?.name ?? slug;
+    settings?.products?.find((p) => p.slug.current === slug)?.name ?? slug;
 
   let orderStatusClasses = "";
   let textClasses = "";
@@ -283,8 +283,8 @@ const OrderModal: React.FC<{
   );
   const total =
     selectedItems.reduce((sum, item) => {
-      const product = allAdminProducts.find((p) => p.slug === item.slug);
-      return sum + item.quantity * (product?.priceInCents ?? 0);
+      const product = allAdminProducts.find((p) => p.slug.current === item.slug);
+      return sum + item.quantity * (product?.priceInPence ?? 0);
     }, 0) / 100;
 
   useEffect(() => {
@@ -360,7 +360,7 @@ const OrderModal: React.FC<{
       collectionDate: collectionDate?.getTime() ? collectionDate?.getTime() / 1000 : undefined,
       quantity: selectedItems.reduce((s, i) => s + i.quantity, 0),
       product: selectedItems
-        .map((i) => allAdminProducts.find((p) => p.slug === i.slug)?.name ?? i.slug)
+        .map((i) => allAdminProducts.find((p) => p.slug.current === i.slug)?.name ?? i.slug)
         .join(" + "),
       items: selectedItems,
       total: total * 100,
@@ -483,20 +483,20 @@ const OrderModal: React.FC<{
               <h3 className="text-lg font-bold mb-3">Products</h3>
               <div className="grid grid-cols-2 gap-3">
                 {allAdminProducts.map((product) => {
-                  const item = selectedItems.find((i) => i.slug === product.slug);
+                  const item = selectedItems.find((i) => i.slug === product.slug.current);
                   const isSelected = !!item;
                   return (
                     <div
-                      key={product.slug}
+                      key={product.slug.current}
                       className={`flex items-center justify-between border-2 rounded-md p-3 cursor-pointer transition-colors ${
                         isSelected ? "border-green-700 bg-green-50" : "border-gray-300"
                       }`}
-                      onClick={() => toggleProduct(product.slug)}
+                      onClick={() => toggleProduct(product.slug.current)}
                     >
                       <div className="flex flex-col">
                         <span className="font-medium text-sm">{product.name}</span>
                         <span className="text-xs text-gray-500">
-                          €{(product.priceInCents / 100).toFixed(2)}
+                          €{(product.priceInPence / 100).toFixed(2)}
                         </span>
                       </div>
                       {isSelected && (
@@ -506,7 +506,7 @@ const OrderModal: React.FC<{
                         >
                           <button
                             className="w-6 h-6 border border-green-700 rounded text-green-700 font-bold flex items-center justify-center hover:bg-green-700 hover:text-white transition-colors"
-                            onClick={() => setItemQuantity(product.slug, (item?.quantity ?? 1) - 1)}
+                            onClick={() => setItemQuantity(product.slug.current, (item?.quantity ?? 1) - 1)}
                           >
                             –
                           </button>
@@ -515,7 +515,7 @@ const OrderModal: React.FC<{
                           </span>
                           <button
                             className="w-6 h-6 border border-green-700 rounded text-green-700 font-bold flex items-center justify-center hover:bg-green-700 hover:text-white transition-colors"
-                            onClick={() => setItemQuantity(product.slug, (item?.quantity ?? 1) + 1)}
+                            onClick={() => setItemQuantity(product.slug.current, (item?.quantity ?? 1) + 1)}
                           >
                             +
                           </button>

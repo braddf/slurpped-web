@@ -267,13 +267,13 @@ const ProductDisplay: NextPage<OrderProps> = ({
     if (!selectedItems.length) return;
     const checkoutItems = selectedItems
       .map((item) => {
-        const p = allProducts.find((p) => p.slug === item.slug);
+        const p = allProducts.find((p) => p.slug.current === item.slug);
         return p
           ? {
               slug: item.slug,
               name: p.name,
               stripeProductId: p.stripeProductId,
-              priceInCents: p.priceInCents,
+              priceInPence: p.priceInPence,
               quantity: item.quantity
             }
           : null;
@@ -282,7 +282,7 @@ const ProductDisplay: NextPage<OrderProps> = ({
       slug: string;
       name: string;
       stripeProductId: string;
-      priceInCents: number;
+      priceInPence: number;
       quantity: number;
     }[];
     const totalQuantity = selectedItems.reduce((s, i) => s + i.quantity, 0);
@@ -410,19 +410,19 @@ const ProductDisplay: NextPage<OrderProps> = ({
         {/* PRODUCTS */}
         <QuestionSection text="Select Products:">
           {allProducts.map((product) => {
-            const item = selectedItems.find((i) => i.slug === product.slug);
+            const item = selectedItems.find((i) => i.slug === product.slug.current);
             const isSelected = !!item;
             return (
               <div
-                key={product.slug}
+                key={product.slug.current}
                 className={`flex flex-1 sm:flex-initial sm:max-w-xs flex-col items-center justify-center text-center border-4 rounded-md my-auto py-4 px-6 min-h-32 cursor-pointer transition-colors ${
                   isSelected ? "border-green-700 bg-green-50" : "border-gray-300"
                 }${!product.available ? " cursor-not-allowed opacity-50" : ""}`}
-                onClick={() => product.available && toggleProduct(product.slug)}
+                onClick={() => product.available && toggleProduct(product.slug.current)}
               >
                 <h4 className="text-xl sm:text-2xl mb-1">{product.name}</h4>
                 <span className="text-sm text-gray-500 mb-2">
-                  {formatter.format(product.priceInCents / 100)}
+                  {formatter.format(product.priceInPence / 100)}
                 </span>
                 {isSelected && (
                   <div
@@ -431,14 +431,14 @@ const ProductDisplay: NextPage<OrderProps> = ({
                   >
                     <button
                       className="w-8 h-8 border-2 border-green-700 rounded-full text-lg font-bold text-green-700 flex items-center justify-center hover:bg-green-700 hover:text-white transition-colors"
-                      onClick={() => setItemQuantity(product.slug, (item?.quantity ?? 1) - 1)}
+                      onClick={() => setItemQuantity(product.slug.current, (item?.quantity ?? 1) - 1)}
                     >
                       –
                     </button>
                     <span className="text-lg font-bold w-6 text-center">{item?.quantity}</span>
                     <button
                       className="w-8 h-8 border-2 border-green-700 rounded-full text-lg font-bold text-green-700 flex items-center justify-center hover:bg-green-700 hover:text-white transition-colors"
-                      onClick={() => setItemQuantity(product.slug, (item?.quantity ?? 1) + 1)}
+                      onClick={() => setItemQuantity(product.slug.current, (item?.quantity ?? 1) + 1)}
                     >
                       +
                     </button>
@@ -504,7 +504,7 @@ const ProductDisplay: NextPage<OrderProps> = ({
                   return (
                     sum +
                     (item.quantity *
-                      (allProducts.find((p) => p.slug === item.slug)?.priceInCents ?? 0)) /
+                      (allProducts.find((p) => p.slug.current === item.slug)?.priceInPence ?? 0)) /
                       100
                   );
                 }, 0)

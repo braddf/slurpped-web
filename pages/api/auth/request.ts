@@ -16,7 +16,7 @@ function sha256(s: string) {
 async function issueSealedLink(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { email, userAgent } = req.body;
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const baseUrl = process.env.APP_URL;
     const now = Math.floor(Date.now() / 1000);
     const payload = {
       email: email.toLowerCase(),
@@ -41,8 +41,8 @@ async function issueSealedLink(req: NextApiRequest, res: NextApiResponse) {
     const recipients = [new Recipient(email)];
 
     const sentFrom = new Sender(
-      process.env.MAILERSEND_FROM_EMAIL || "info@slurpped.co.uk",
-      process.env.NEXT_PUBLIC_BRAND_NAME || "Slurpp'd"
+      process.env.MAILERSEND_FROM_EMAIL || "test-vz9dlemwqyn4kj50.mlsender.net",
+      process.env.NEXT_PUBLIC_BRAND_NAME || "Slurpped"
     );
     const emailParams = new EmailParams()
       .setFrom(sentFrom)

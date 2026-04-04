@@ -7,7 +7,7 @@ import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-02-24.acacia" });
 
-type CheckoutItem = OrderItem & { name: string; stripeProductId: string; priceInCents: number };
+type CheckoutItem = OrderItem & { name: string; stripeProductId: string; priceInPence: number };
 
 const subscribe: NextApiHandler = withIronSessionApiRoute(async (req, res) => {
   if (!req.session.user?.isLoggedIn) return;
@@ -69,7 +69,7 @@ const subscribe: NextApiHandler = withIronSessionApiRoute(async (req, res) => {
       price_data: {
         currency: "eur",
         product: item.stripeProductId,
-        unit_amount: item.priceInCents
+        unit_amount: item.priceInPence
       },
       quantity: item.quantity
     })),
