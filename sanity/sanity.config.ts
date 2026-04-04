@@ -5,7 +5,7 @@ import { deskTool } from "sanity/desk";
 import schemas from "./schemas/schema";
 
 export default defineConfig({
-  name: "slurppd",
+  name: "slurpped",
   title: "Slurpp'd",
   projectId: "yqt1jtan",
   dataset: "production",

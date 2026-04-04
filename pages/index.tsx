@@ -555,7 +555,7 @@ export const getServerSideProps = async (context: NextPageContext) => {
     useCdn: true
   });
   const session = await getIronSession(context.req!, context.res!, {
-    cookieName: "iron-session/slurppd",
+    cookieName: "iron-session/slurpped",
     password: process.env.SECRET_COOKIE_PASSWORD || ""
   });
 

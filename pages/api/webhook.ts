@@ -98,7 +98,7 @@ const webhookRoute = async (req: NextApiRequestWithDB, res: NextApiResponse) => 
         : "";
 
       const sentFrom = new Sender(
-        process.env.MAILERSEND_FROM_EMAIL || "info@slurppd.co.uk",
+        process.env.MAILERSEND_FROM_EMAIL || "info@slurpped.co.uk",
         process.env.NEXT_PUBLIC_BRAND_NAME || "Slurpp'd"
       );
       const collectionDate = new Date(Number(sess.metadata.collectionDate));
@@ -153,7 +153,7 @@ const webhookRoute = async (req: NextApiRequestWithDB, res: NextApiResponse) => 
             },
             {
               var: "support_email",
-              value: process.env.MAILERSEND_FROM_EMAIL || "info@slurppd.co.uk"
+              value: process.env.MAILERSEND_FROM_EMAIL || "info@slurpped.co.uk"
             },
             {
               var: "collection_date",

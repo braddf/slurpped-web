@@ -4,7 +4,7 @@ import type { IUser } from "../pages/api/user";
 
 const sessionOptions: IronSessionOptions = {
   password: process.env.SECRET_COOKIE_PASSWORD as string,
-  cookieName: "iron-session/slurppd",
+  cookieName: "iron-session/slurpped",
   // secure: true should be used in production (HTTPS) but can't be used in development (HTTP)
   cookieOptions: {
     secure: process.env.NODE_ENV === "production"

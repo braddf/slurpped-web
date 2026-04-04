@@ -41,7 +41,7 @@ async function issueSealedLink(req: NextApiRequest, res: NextApiResponse) {
     const recipients = [new Recipient(email)];
 
     const sentFrom = new Sender(
-      process.env.MAILERSEND_FROM_EMAIL || "info@slurppd.co.uk",
+      process.env.MAILERSEND_FROM_EMAIL || "info@slurpped.co.uk",
       process.env.NEXT_PUBLIC_BRAND_NAME || "Slurpp'd"
     );
     const emailParams = new EmailParams()
