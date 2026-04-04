@@ -6,7 +6,7 @@ import schemas from "./schemas/schema";
 
 export default defineConfig({
   name: "slurpped",
-  title: "Slurpp'd",
+  title: "Slurpped",
   projectId: "yqt1jtan",
   dataset: "production",
   plugins: withDocumentI18nPlugin([deskTool(), table()], {
