@@ -60,6 +60,21 @@ const OrderPage: NextPage = () => {
       });
   }, []);
 
+  // Pre-select product and order type from query params (e.g. from product page CTAs).
+  // Intentionally depends only on router.isReady — we want this to fire once when
+  // the query is first available, not re-run on every subsequent query change.
+  useEffect(() => {
+    if (!router.isReady) return;
+    const productSlug = router.query.product as string | undefined;
+    const type = router.query.type as string | undefined;
+    if (productSlug) {
+      setSelectedItems([{ slug: productSlug, quantity: 1 }]);
+    }
+    if (type === "subscribe" || type === "once") {
+      setOrderType(type);
+    }
+  }, [router.isReady]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const toggleProduct = (slug: string) => {
     setSelectedItems((prev) => {
       if (prev.find((i) => i.slug === slug)) return prev.filter((i) => i.slug !== slug);

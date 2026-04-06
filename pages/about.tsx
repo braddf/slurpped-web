@@ -1,112 +1,111 @@
 import React from "react";
 import { NextPage, NextPageContext } from "next";
+import Head from "next/head";
 import { createClient } from "@sanity/client";
-import { getCookies } from "cookies-next";
 import { PortableText } from "@portabletext/react";
-import Image from "next/image";
-import imageUrlBuilder from "@sanity/image-url";
-import { getRandomVeggie } from "../components/icons";
+import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
 
-const About: NextPage<IAboutPage> = (page) => {
-  console.log("About page");
-  console.log("page", page);
-  const client = createClient({
-    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
-    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
-    apiVersion: "2021-10-21",
-    token: process.env.SANITY_BOT_TOKEN
-    // useCdn: true,
-  });
-  const imageBuilder = imageUrlBuilder(client);
-  const vegArray = [2, 5, 3, 1, 0, 4];
+type SanityAboutPage = {
+  title: string;
+  intro?: string;
+  content?: any;
+};
+
+type AboutProps = {
+  sanityPage: SanityAboutPage | null;
+};
+
+const About: NextPage<AboutProps> = ({ sanityPage }) => {
   return (
-    <div className="container pt-12">
-      <h1 className="text-3xl font-bold mb-24 text-underline-primary text-center">{page.title}</h1>
-      <div className="max-w-sm sm:max-w-xl mx-auto mt-12 border-l-sweetcorn border-l-4 pl-12">
-        <b className="block mb-4">{page.intro}</b>
-        <div className="">
-          <PortableText value={page.content} />
-        </div>
-      </div>
-      <div className="my-32">
-        <h2 className="text-2xl font-bold mb-8 text-underline-primary">{page.teamTitle}</h2>
-        <h4 className="text-lg font-normal">{page.teamSubtitle}</h4>
-        <div className="flex flex-wrap justify-between sm:justify-center xl:justify-between mt-12 gap-x-6 sm:gap-x-24">
-          {page.teamMembers.map((member, index) => (
-            <div key={member.name} className="flex-initial mb-12">
-              <div className="flex flex-col items-center">
-                <div className="relative overflow-hidden w-32 h-32 rounded-full mb-4 border-4 border-sweetcorn">
-                  {!!member.image && (
-                    <Image
-                      src={imageBuilder.image(member.image).url()}
-                      alt={member.name}
-                      width={700}
-                      height={200}
-                      className="m-0"
-                      // fill={true}
-                      style={{ objectFit: "cover" }}
-                    />
-                  )}
-                  {!member.image && (
-                    <div className="flex items-center w-full h-full justify-center">
-                      <div className="scale-[0.4]">{getRandomVeggie(vegArray[index])}</div>
-                    </div>
-                  )}
-                </div>
-                <h5 className="text-base sm:text-xl font-bold mb-0.5 sm:mb-2">{member.name}</h5>
-                <p className="text-sm text-center max-w-[9rem]">{member.role}</p>
+    <div>
+      <Head>
+        <title>About — Slurpped</title>
+      </Head>
+
+      <div className="container pt-12 pb-24 max-w-3xl">
+        {sanityPage ? (
+          <>
+            <h1 className="text-6xl text-soil mb-8">{sanityPage.title}</h1>
+            {sanityPage.intro && (
+              <p className="text-xl text-broth mb-8 border-l-4 border-sweetcorn pl-6">
+                {sanityPage.intro}
+              </p>
+            )}
+            {sanityPage.content && (
+              <div className="rich-text text-soil">
+                <PortableText value={sanityPage.content} />
               </div>
+            )}
+          </>
+        ) : (
+          <>
+            <h1 className="text-6xl text-soil mb-6">Our Story</h1>
+            <p className="text-xl text-broth mb-8 border-l-4 border-sweetcorn pl-6">
+              Real ramen. No shortcuts. Built from 16 years in professional kitchens.
+            </p>
+
+            <div className="rich-text text-soil space-y-6 text-lg leading-relaxed">
+              <p>
+                Slurpped was born out of a simple frustration: proper ramen is extraordinary, but
+                almost impossible to make at home without the knowledge, time, and technique that
+                only comes from years of professional cooking.
+              </p>
+              <p>
+                Ollie Bloxham has spent 16 years in professional kitchens — including
+                Michelin-starred restaurants — and has a particular obsession with Japanese cuisine.
+                Slurpped is his way of bringing that expertise into your kitchen, without the faff.
+              </p>
+              <p>
+                Every kit is designed around the same principles Ollie uses in a professional
+                kitchen: quality ingredients, precise preparation, and flavour you can taste the
+                difference in. We source from British producers where possible and never compromise
+                on the stuff that matters.
+              </p>
+              <p>
+                We're based in Bristol, UK. Drop us a line at{" "}
+                <Link href="mailto:info@slurpped.co.uk" className="text-carrot underline">
+                  info@slurpped.co.uk
+                </Link>
+                .
+              </p>
             </div>
-          ))}
-        </div>
+
+            <blockquote className="mt-12 border-l-4 border-carrot pl-6">
+              <p className="text-2xl text-soil italic mb-3">
+                "This is real food, made the right way."
+              </p>
+              <cite className="text-broth not-italic font-medium">— Ollie Bloxham, Founder</cite>
+            </blockquote>
+          </>
+        )}
       </div>
     </div>
   );
 };
 
-export default About;
-
-export const getServerSideProps = async (context: NextPageContext) => {
+export const getServerSideProps = async (_context: NextPageContext) => {
   const client = createClient({
     projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
     dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
-    token: process.env.SANITY_BOT_TOKEN
-    // useCdn: true,
+    useCdn: true
   });
 
-  const language = getCookies(context)["groentetas/lang"] || "en-gb";
-
-  const query = `*[_type == "about-page"]`;
-
-  let page: any;
-  await client.fetch(query).then((pages: IAboutPage[]) => {
-    page = pages[0];
-  });
-
-  if (!page?.title) {
-    return {
-      notFound: true
-    };
+  let sanityPage: SanityAboutPage | null = null;
+  try {
+    const pages = await client.fetch(`*[_type == "about-page"]`);
+    sanityPage = pages?.[0] || null;
+  } catch (e) {
+    Sentry.captureException(e);
+    // Fall through to static content
   }
+
   return {
     props: {
-      ...page
+      sanityPage: sanityPage?.title ? sanityPage : null
     }
   };
 };
 
-type IAboutPage = {
-  title: string;
-  subtitle: string;
-  intro: string;
-  featuredImage: unknown;
-  content: any;
-  teamTitle: string;
-  teamSubtitle: string;
-  teamMembers: {
-    name: string;
-    role: string;
-    image: unknown;
-  }[];
-};
+export default About;

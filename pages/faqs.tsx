@@ -1,118 +1,121 @@
 import React, { ChangeEvent, useState } from "react";
 import { NextPage, NextPageContext } from "next";
+import Head from "next/head";
 import { createClient } from "@sanity/client";
-import { getCookies } from "cookies-next";
 import { PortableText, toPlainText } from "@portabletext/react";
-import Image from "next/image";
-import imageUrlBuilder from "@sanity/image-url";
-import { getRandomVeggie } from "../components/icons";
 
-const FAQs: NextPage<IFAQsPage> = (page) => {
-  const client = createClient({
-    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
-    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
-    apiVersion: "2021-10-21",
-    token: process.env.SANITY_BOT_TOKEN
-    // useCdn: true,
-  });
-  const imageBuilder = imageUrlBuilder(client);
-  const filterFaqs = (e: ChangeEvent<HTMLInputElement>) => {
-    const filteredFaqs = page.faqs.filter((faq) => {
-      return (
-        faq.question.toLowerCase().includes(e.target.value.toLowerCase()) ||
-        toPlainText(faq.answer).toLowerCase().includes(e.target.value.toLowerCase())
-      );
-    });
-    setFaqs(filteredFaqs);
-  };
+type IFaq = { question: string; answer: any };
+type IFAQsPage = { title: string; intro?: string; content?: any; faqs: IFaq[] };
+
+type FAQsProps = {
+  page: IFAQsPage;
+};
+
+const STATIC_FAQS: IFaq[] = [
+  {
+    question: "How does delivery work?",
+    answer: [{ _type: "block", children: [{ _type: "span", text: "We deliver Thursday, Friday, and Saturday. Choose your preferred day when you order. Kits arrive chilled and ready to cook." }] }]
+  },
+  {
+    question: "What's in a ramen kit?",
+    answer: [{ _type: "block", children: [{ _type: "span", text: "Each kit contains everything you need to make restaurant-quality ramen at home — broth, noodles, toppings, and Ollie's step-by-step prep guide. Nothing missing, nothing wasted." }] }]
+  },
+  {
+    question: "How do subscriptions work?",
+    answer: [{ _type: "block", children: [{ _type: "span", text: "Subscribe and receive your chosen kit every week, billed on Sunday for the following week's delivery. You can pause, change, or cancel at any time via your account page." }] }]
+  },
+  {
+    question: "Can I buy a kit without subscribing?",
+    answer: [{ _type: "block", children: [{ _type: "span", text: "Yes — every kit is available as a one-off purchase too. Just select 'Buy once' on the order page." }] }]
+  }
+];
+
+const FAQs: NextPage<FAQsProps> = ({ page }) => {
   const [faqs, setFaqs] = useState(page.faqs);
+
+  const filterFaqs = (e: ChangeEvent<HTMLInputElement>) => {
+    const q = e.target.value.toLowerCase();
+    if (!q) {
+      setFaqs(page.faqs);
+      return;
+    }
+    setFaqs(
+      page.faqs.filter((faq) => {
+        const answerText = typeof faq.answer === "string" ? faq.answer : toPlainText(faq.answer);
+        return faq.question.toLowerCase().includes(q) || answerText.toLowerCase().includes(q);
+      })
+    );
+  };
+
   return (
-    <div className="container pt-12 mb-36 max-w-5xl">
-      <h1 className="text-3xl font-bold mb-24 text-underline-primary text-center">{page.title}</h1>
-      <div className="max-w-2xl sm:max-w-3xl mx-auto mt-12">
-        <b className="block mb-4">{page.intro}</b>
-        <div className="">
-          <PortableText value={page.content} />
-        </div>
-      </div>
-      <div className="my-24">
-        <div className="mb-24 sm:mb-32 w-64 mx-auto">
-          <label className="flex flex-col">
-            <span className="mb-2">Filter FAQs by keyword</span>
-            <input
-              className="bg-white border-0 rounded p-2"
-              type="text"
-              placeholder="e.g. mushrooms"
-              onChange={filterFaqs}
-            />
-          </label>
+    <div>
+      <Head>
+        <title>FAQs — Slurpped</title>
+      </Head>
+
+      <div className="container pt-12 pb-24 max-w-3xl">
+        <h1 className="text-6xl text-soil mb-6">{page.title}</h1>
+        {page.intro && (
+          <p className="text-xl text-broth mb-8 border-l-4 border-sweetcorn pl-6">{page.intro}</p>
+        )}
+        {page.content && (
+          <div className="rich-text text-soil mb-8">
+            <PortableText value={page.content} />
+          </div>
+        )}
+
+        <div className="mb-10">
+          <input
+            className="text-input w-full max-w-sm bg-white"
+            type="text"
+            placeholder="Search FAQs…"
+            onChange={filterFaqs}
+          />
           {faqs.length < page.faqs.length && (
-            <span className="block text-sm font-gray-700 mt-2">
-              Showing {faqs.length} of {page.faqs.length} FAQs
-            </span>
+            <p className="text-sm text-broth mt-2">
+              Showing {faqs.length} of {page.faqs.length} results
+            </p>
           )}
         </div>
-        {faqs.map((faq, index) => {
-          return (
-            <div key={faq.question.replace(" ", "").slice(0, 30)} className="flex flex-col">
-              <h2 className="text-2xl font-bold mb-8 text-underline-primary">{faq.question}</h2>
-              <div className="max-w-2xl sm:max-w-3xl w-full mx-auto">
+
+        <div className="flex flex-col gap-10">
+          {faqs.map((faq, i) => (
+            <div key={i} className="border-l-4 border-sweetcorn pl-6">
+              <h2 className="text-3xl text-soil mb-3">{faq.question}</h2>
+              <div className="rich-text text-broth">
                 <PortableText value={faq.answer} />
               </div>
-              <div className="my-12 flex items-center justify-center">
-                <div className="relative scale-[0.3] block">{getRandomVeggie(index % 3)}</div>
-              </div>
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
     </div>
   );
 };
 
-export default FAQs;
-
-export const getServerSideProps = async (context: NextPageContext) => {
+export const getServerSideProps = async (_context: NextPageContext) => {
   const client = createClient({
     projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
     dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
     apiVersion: "2021-10-21",
-    token: process.env.SANITY_BOT_TOKEN
-    // useCdn: true,
+    useCdn: true
   });
 
-  const language = getCookies(context)["groentetas/lang"] || "en-gb";
-
-  const query = `*[_type == "faq-page"]`;
-  // const faqQuery = `*[_type == "faq"]`;
-
-  let page: any;
-  await client.fetch(query).then((pages: IFAQsPage[]) => {
-    page = pages[0];
-  });
-  // const faqs: IFaq[] = await client.fetch(faqQuery);
-
-  if (!page?.title) {
-    return {
-      notFound: true
-    };
+  let page: IFAQsPage | null = null;
+  try {
+    const pages: IFAQsPage[] = await client.fetch(`*[_type == "faq-page"]`);
+    page = pages?.[0] || null;
+  } catch {
+    // Fall through to static
   }
+
   return {
     props: {
-      ...page
-      // faqs
+      page: page?.title
+        ? page
+        : { title: "FAQs", faqs: STATIC_FAQS }
     }
   };
 };
 
-type IFAQsPage = {
-  title: string;
-  intro: string;
-  content: any;
-  faqs: IFaq[];
-};
-
-type IFaq = {
-  question: string;
-  answer: any;
-};
+export default FAQs;

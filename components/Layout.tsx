@@ -21,17 +21,14 @@ export default function Layout({
   return (
     <>
       <Head>
-        <title>Groentetas</title>
+        <title>Slurpped</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         {/*@ts-ignore*/}
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin />
         <link
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500&display=swap"
           rel="stylesheet"
         />
-        <link rel="manifest" href="/groentetas.webmanifest" />
-        {/*<meta name="apple-mobile-web-app-capable" content="yes" />*/}
-        {/*<meta name="apple-mobile-web-app-status-bar-style" content="default" />*/}
       </Head>
       <style jsx global>
         {`
@@ -43,10 +40,9 @@ export default function Layout({
 
           body {
             margin: 0;
-            color: #333;
-            font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-              "Helvetica Neue", Arial, Noto Sans, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-              "Segoe UI Symbol", "Noto Color Emoji";
+            color: #3D1800;
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+              "Helvetica Neue", Arial, Noto Sans, sans-serif;
           }
         `}
       </style>
@@ -66,17 +62,9 @@ export default function Layout({
                   {item.overrideTitle || item.title}
                 </Link>
               ))}
-              {/*<Link href={"/about"}>About Us</Link>*/}
-              {/*<Link href={"/contact"}>Contact</Link>*/}
-              {/*<Link href={"/faqs"}>FAQs</Link>*/}
-              {/*<Link href={"/recipes"}>Recipes</Link>*/}
-              <div className="socials flex gap-2">
-                {/*<a href="https://www.facebook.com/groentetas">*/}
-                {/*  <Image src="/facebook.svg" width="32" height="32" alt="facebook-logo" />*/}
-                {/*</a>*/}
-                {/*<a href="https://www.instagram.com/groentetas">*/}
-                {/*  <Image src="/instagram.svg" width="32" height="32" alt="instagram-logo" />*/}
-                {/*</a>*/}
+              <div className="socials flex gap-4 mt-2">
+                <a href="#" aria-label="Instagram">Instagram</a>
+                <a href="#" aria-label="TikTok">TikTok</a>
               </div>
             </div>
             <div className="flex flex-col items-end lg:items-start start gap-2 py-8">
@@ -93,14 +81,14 @@ export default function Layout({
                 {generalSettings?.contactPhone}
               </Link>
               <p className="text-sm">{generalSettings?.contactAddress}</p>
-              <p className="text-sm">© Groentetas Utrecht {new Date().getFullYear()}</p>
+              <p className="text-sm">© Slurpped {new Date().getFullYear()}</p>
             </div>
             <div className="col-span-2 order-1 min-[450px]:order-2 min-[450px]:col-span-1 flex flex-col py-8 items-center min-[450px]:items-end">
               <div className="-mt-3 mb-3">
                 <Image
-                  src="/NewLogo.png"
+                  src="/SlurppedLogo.png"
                   className="-mt-3 mb-3"
-                  alt="Groentetas Logo"
+                  alt="Slurpped"
                   width={168}
                   height={80}
                 />

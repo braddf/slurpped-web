@@ -1,23 +1,46 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext, useState } from "react";
 import fetchJson from "../../lib/fetchJson";
 import { NextPage } from "next";
-import { Stripe } from "stripe";
 import { withIronSessionSsr } from "iron-session/next";
 import sessionOptions from "../../lib/session";
 import { useRouter } from "next/router";
 import useUser from "../../lib/useUser";
+import { SettingsContext } from "../_app";
 
-type OrderProps = {
-  checkoutSessionsList: Stripe.ApiList<Stripe.Checkout.Session> | null;
+type SerializedOrder = {
+  id: string;
+  status: string;
+  product: string;
+  deliverySlot: string;
+  deliveryDate: number | null;
+  total: number | null;
+  createdAt: string;
 };
 
-const OrdersPage: NextPage<OrderProps> = ({ checkoutSessionsList }) => {
+type OrdersProps = {
+  orders: SerializedOrder[];
+};
+
+const GBP = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" });
+
+const STATUS_COLOURS: Record<string, string> = {
+  paid: "bg-green-100 text-green-800",
+  unpaid: "bg-yellow-100 text-yellow-800",
+  refunded: "bg-gray-100 text-gray-600",
+  cancelled: "bg-red-100 text-red-700"
+};
+
+const OrdersPage: NextPage<OrdersProps> = ({ orders }) => {
   const router = useRouter();
   const { user } = useUser({ redirectTo: "/login" });
+  const settings = useContext(SettingsContext);
   const [managingSubscription, setManagingSubscription] = useState(false);
 
-  const checkoutSessions =
-    checkoutSessionsList?.data.filter((session) => session.payment_status === "paid") || [];
+  // Map product slug → display name using SettingsContext products
+  const getProductName = (slug: string) => {
+    const product = settings?.products?.find((p) => p.slug.current === slug);
+    return product?.name || slug;
+  };
 
   const openBillingPortal = async () => {
     setManagingSubscription(true);
@@ -53,9 +76,9 @@ const OrdersPage: NextPage<OrderProps> = ({ checkoutSessionsList }) => {
       )}
 
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Your Orders</h2>
+        <h2 className="text-5xl text-soil">Your Orders</h2>
         <button
-          className="px-4 py-2 border-2 border-gray-300 rounded-md text-sm hover:border-green-700 transition-colors disabled:opacity-50"
+          className="px-4 py-2 border-2 border-soil rounded-full text-sm hover:bg-chickpea transition-colors disabled:opacity-50"
           onClick={openBillingPortal}
           disabled={managingSubscription}
         >
@@ -64,42 +87,41 @@ const OrdersPage: NextPage<OrderProps> = ({ checkoutSessionsList }) => {
       </div>
 
       <div className="flex flex-col gap-3">
-        {checkoutSessions.length === 0 && (
-          <div className="text-gray-400 py-8 text-center">No orders yet.</div>
+        {orders.length === 0 && (
+          <div className="text-broth py-12 text-center">No orders yet.</div>
         )}
-        {checkoutSessions.map((session) => {
-          const createdAt = new Date(session.created * 1000);
-          const deliverySlot = session.metadata?.deliverySlot || "";
-          const deliveryAddressStr = session.metadata?.deliveryAddress
-            ? (() => {
-                try {
-                  const a = JSON.parse(session.metadata.deliveryAddress);
-                  return [a.line1, a.city, a.postcode].filter(Boolean).join(", ");
-                } catch {
-                  return "";
-                }
-              })()
-            : "";
+        {orders.map((order) => {
+          const deliveryDateStr = order.deliveryDate
+            ? new Date(order.deliveryDate).toLocaleDateString("en-GB", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+                year: "numeric"
+              })
+            : null;
+          const statusColour = STATUS_COLOURS[order.status] || "bg-gray-100 text-gray-600";
 
           return (
             <div
-              key={session.id}
-              className="grid grid-cols-2 sm:grid-cols-5 gap-3 border border-gray-300 rounded-md p-4 text-sm"
+              key={order.id}
+              className="grid grid-cols-2 sm:grid-cols-5 gap-3 border border-gray-200 rounded-xl p-4 text-sm"
             >
-              <div className="col-span-2 sm:col-span-2 font-medium self-center">
-                {session.metadata?.product || "Order"}
+              <div className="col-span-2 sm:col-span-2 font-medium self-center text-soil">
+                {getProductName(order.product)}
               </div>
-              <div className="sm:text-center self-center text-gray-600">
-                {createdAt.toLocaleDateString("en-GB")}
-              </div>
-              <div className="sm:text-center self-center capitalize text-gray-600">
-                {deliverySlot || "—"}
-                {deliveryAddressStr && (
-                  <span className="block text-xs text-gray-400">{deliveryAddressStr}</span>
+              <div className="sm:text-center self-center text-broth capitalize">
+                {order.deliverySlot || "—"}
+                {deliveryDateStr && (
+                  <span className="block text-xs text-gray-400">{deliveryDateStr}</span>
                 )}
               </div>
-              <div className="text-right self-center font-medium">
-                £{((Number(session.amount_total) || 0) / 100).toFixed(2)}
+              <div className="sm:text-center self-center">
+                <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColour}`}>
+                  {order.status}
+                </span>
+              </div>
+              <div className="text-right self-center font-medium text-soil">
+                {order.total != null ? GBP.format(order.total / 100) : "—"}
               </div>
             </div>
           );
@@ -115,22 +137,20 @@ export const getServerSideProps = withIronSessionSsr(async ({ req }) => {
 
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
-  headers.append("Accept", "application/json");
   headers.append("Cookie", req?.headers.cookie || "");
 
-  let checkoutSessionsList: unknown = null;
+  let orders: SerializedOrder[] = [];
   try {
-    checkoutSessionsList = await fetchJson(`${process.env.APP_URL}/api/get-checkout-sessions`, {
-      headers
-    });
+    const result: any = await fetchJson(`${process.env.APP_URL}/api/user/orders`, { headers });
+    orders = Array.isArray(result) ? result : [];
   } catch (error) {
-    console.error("Error fetching checkout sessions:", error);
+    console.error("Error fetching orders:", error);
   }
 
   return {
     props: {
       user: req.session.user,
-      checkoutSessionsList
+      orders
     }
   };
 }, sessionOptions);
