@@ -3,12 +3,21 @@ import User from "./User";
 import { OrderItem, OrderStatuses } from "../types";
 // eslint-disable-next-line import/no-cycle
 
+export type DeliveryAddress = {
+  line1: string;
+  line2?: string;
+  city: string;
+  postcode: string;
+  country: "GB";
+};
+
 export type UnsavedOrder = Pick<
   Order,
   | "status"
   | "userId"
-  | "collectionDate"
-  | "collectionLocation"
+  | "deliveryDate"
+  | "deliverySlot"
+  | "deliveryAddress"
   | "product"
   | "quantity"
   | "total"
@@ -20,9 +29,10 @@ export default class Order extends Model {
   paymentIntentId?: string;
   status!: OrderStatuses;
   userId!: string;
-  paidAt?: number;
-  collectionDate!: number;
-  collectionLocation!: string;
+  paidAt?: number; // Unix seconds (legacy — deliveryDate uses milliseconds)
+  deliveryDate!: number;
+  deliverySlot!: string;
+  deliveryAddress?: DeliveryAddress;
   product!: string;
   items?: OrderItem[];
   quantity!: number;
@@ -62,8 +72,8 @@ export default class Order extends Model {
     required: [
       "status",
       "userId",
-      "collectionDate",
-      "collectionLocation",
+      "deliveryDate",
+      "deliverySlot",
       "product",
       "quantity",
       // "orderType",
@@ -75,8 +85,9 @@ export default class Order extends Model {
       id: { type: "string" },
       status: { type: "string", minLength: 1, maxLength: 255 },
       userId: { type: "string", minLength: 1, maxLength: 255 },
-      collectionDate: { type: "integer" },
-      collectionLocation: { type: "string", minLength: 1, maxLength: 255 },
+      deliveryDate: { type: "integer" },
+      deliverySlot: { type: "string", minLength: 1, maxLength: 255 },
+      deliveryAddress: { type: "object" },
       product: { type: "string", minLength: 1, maxLength: 255 },
       items: { type: "array" },
       quantity: { type: "integer" },

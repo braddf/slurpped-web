@@ -1,5 +1,6 @@
 import { Model, Modifiers, snakeCaseMappers } from "objection";
 import Order from "./Order";
+import { DeliveryAddress } from "./Order";
 // eslint-disable-next-line import/no-cycle
 
 export default class User extends Model {
@@ -19,6 +20,10 @@ export default class User extends Model {
   last4?: string;
 
   subscriptionId?: string;
+
+  defaultDeliveryAddress?: DeliveryAddress;
+
+  defaultDeliverySlot?: string;
 
   // pets?: Animal[]
   // children?: Person[]

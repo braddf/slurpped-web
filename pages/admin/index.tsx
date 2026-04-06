@@ -1,60 +1,26 @@
-import React, { useState, useEffect, Dispatch, SetStateAction, useRef, useContext } from "react";
+import React, { useState, useEffect, Dispatch, SetStateAction, useContext } from "react";
 import fetchJson from "../../lib/fetchJson";
-import { NextApiResponse, NextPage, NextPageContext } from "next";
-import { Stripe } from "stripe";
+import { NextPage } from "next";
 import { withIronSessionSsr } from "iron-session/next";
 import sessionOptions from "../../lib/session";
-import { useRouter } from "next/router";
-import "react-day-picker/dist/style.css";
 import useUser from "../../lib/useUser";
 import Order, { UnsavedOrder } from "../../models/Order";
 import AsyncSelect from "react-select/async";
-import {
-  formatPrettyDateString,
-  get2ndWed,
-  get2ndWednesdayString,
-  getLastWed,
-  getLastWednesdayString,
-  getNextOrderDates,
-  getNextOrderWed,
-  getNextWed,
-  getNextWednesdayString
-} from "../../helpers/utils";
+import { formatPrettyDateString, getNextOrderDates } from "../../helpers/utils";
 import { getCookies } from "cookies-next";
 import { LoadingSpinner, SmallCarrot } from "../../components/icons";
-import {
-  blockedMatcher,
-  getLocation,
-  MultiSelect,
-  QuestionSection,
-  setCollectionDateFromInput
-} from "../order";
-import { DayPicker } from "react-day-picker";
 import User from "../../models/User";
 import { TotalsWidget } from "../../components/admin/TotalsWidget";
 import { LegacyTotalsWidget } from "../../components/admin/LegacyTotalsWidget";
-import {
-  BlockedDate,
-  Location,
-  OrderItem,
-  OrderStatuses,
-  SavedUser,
-  UnsavedUser
-} from "../../types";
+import { OrderItem, OrderStatuses, SavedUser, UnsavedUser } from "../../types";
 import { SettingsContext } from "../_app";
 import SidebarButton from "../../components/admin/SidebarButton";
 import HeaderMenu from "../../components/admin/HeaderMenu";
-import { createClient } from "@sanity/client";
 
-const NEW_ORDER_FORMAT_DATE = new Date("2026-03-28");
+type DeliverySlot = "thursday" | "friday" | "saturday";
+
 
 type OrderProps = {
-  customer: Stripe.Customer;
-  invoicesList: Stripe.ApiList<Stripe.Invoice>;
-  checkoutSessionsList: Stripe.ApiList<Stripe.Checkout.Session>;
-  orders: Order[];
-  blockedDates: BlockedDate[];
-  locations: Location[];
   upcomingOrderDates: {
     summary: {
       totalOrders: number;
@@ -132,12 +98,18 @@ const OrderRow: React.FC<{
         </div>
         <div className={`text-right self-center ${textClasses}`}>{order.orderType}</div>
         <div className={`text-right self-center ${textClasses}`}>
-          {(Number(order.total) / 100).toLocaleString("nl-nl", {
+          {(Number(order.total) / 100).toLocaleString("en-GB", {
             style: "currency",
-            currency: "EUR"
+            currency: "GBP"
           })}
         </div>
         <div className={`text-center self-center -mr-6 text-sm ${textClasses}`}>{order.status}</div>
+        <div className={`text-sm self-center capitalize ${textClasses}`}>
+          {order.deliverySlot}
+          {(order.deliveryAddress as any)?.postcode && (
+            <span className="text-gray-500 text-xs block">{(order.deliveryAddress as any).postcode}</span>
+          )}
+        </div>
         <div className={`text-center self-center -mr-6 ${textClasses}`}>
           {order.collected ? (
             <span
@@ -253,17 +225,10 @@ const OrderModal: React.FC<{
   setShowOrderModal: Dispatch<SetStateAction<boolean>>;
   refreshList: () => void;
   selectedOrder?: Order;
-  locations: Location[];
-}> = ({ setShowOrderModal, refreshList, selectedOrder, locations }) => {
-  const collectionPoints = locations.map((location) => location.name);
-  const [selectedCollectionPoint, setSelectedCollectionPoint] = useState<string | undefined>(
-    "Educatorium"
-  );
-  const [selectedItems, setSelectedItems] = useState<OrderItem[]>([
-    { slug: "groentetas", quantity: 1 }
-  ]);
-  const [collectionDate, setCollectionDate] = useState<Date>();
-  const [dateInPast, setDateInPast] = useState<boolean>(false);
+}> = ({ setShowOrderModal, refreshList, selectedOrder }) => {
+  const [selectedDeliverySlot, setSelectedDeliverySlot] = useState<DeliverySlot>("thursday");
+  const [deliveryAddress, setDeliveryAddress] = useState({ line1: "", line2: "", city: "", postcode: "" });
+  const [selectedItems, setSelectedItems] = useState<OrderItem[]>([]);
 
   // New order stuff
   const [firstName, setFirstName] = useState<string>("");
@@ -311,13 +276,21 @@ const OrderModal: React.FC<{
       setLastName(selectedOrder.user.lastName);
       setEmail(selectedOrder.user.email);
       setSelectedUser(selectedOrder.user);
-      setSelectedCollectionPoint(selectedOrder.collectionLocation.split(" ")[0]);
+      setSelectedDeliverySlot((selectedOrder.deliverySlot as DeliverySlot) || "thursday");
+      if (selectedOrder.deliveryAddress) {
+        const addr = selectedOrder.deliveryAddress as any;
+        setDeliveryAddress({
+          line1: addr.line1 ?? "",
+          line2: addr.line2 ?? "",
+          city: addr.city ?? "",
+          postcode: addr.postcode ?? ""
+        });
+      }
       setSelectedItems(
         selectedOrder.items?.length
           ? selectedOrder.items
           : [{ slug: selectedOrder.product, quantity: selectedOrder.quantity }]
       );
-      setCollectionDate(new Date(selectedOrder.collectionDate * 1000));
       setStatus(selectedOrder.status);
       setOrderNotes(selectedOrder.notes);
     }
@@ -354,10 +327,23 @@ const OrderModal: React.FC<{
     lastName,
     email
   });
+  // Calculate next occurrence of the selected delivery slot from now
+  const getDeliveryDateMs = (slot: DeliverySlot): number => {
+    const dayNumbers: Record<DeliverySlot, number> = { thursday: 4, friday: 5, saturday: 6 };
+    const target = dayNumbers[slot];
+    const now = new Date();
+    const daysUntil = (target + 7 - now.getDay()) % 7 || 7;
+    const d = new Date(now);
+    d.setDate(now.getDate() + daysUntil);
+    d.setHours(9, 0, 0, 0);
+    return d.getTime();
+  };
+
   const buildOrder = () =>
     ({
-      collectionLocation: selectedCollectionPoint,
-      collectionDate: collectionDate?.getTime() ? collectionDate?.getTime() / 1000 : undefined,
+      deliverySlot: selectedDeliverySlot,
+      deliveryDate: getDeliveryDateMs(selectedDeliverySlot),
+      deliveryAddress: { ...deliveryAddress, country: "GB" },
       quantity: selectedItems.reduce((s, i) => s + i.quantity, 0),
       product: selectedItems
         .map((i) => allAdminProducts.find((p) => p.slug.current === i.slug)?.name ?? i.slug)
@@ -527,66 +513,63 @@ const OrderModal: React.FC<{
               </div>
             </div>
 
-            {/* COLLECTION POINT */}
-            <QuestionSection text="Collect from:">
-              {collectionPoints.map((point) => {
-                const location = getLocation(locations, point);
-                return (
-                  <MultiSelect
-                    admin={true}
-                    key={point}
-                    item={point}
-                    label={
-                      location ? (
-                        <div>
-                          {point}
-                          <br />
-                          <small className="text-base">
-                            {location.availableFrom} - {location.availableTo}
-                          </small>
-                        </div>
-                      ) : (
-                        point
-                      )
-                    }
-                    selectedItem={selectedCollectionPoint}
-                    setSelectedItem={setSelectedCollectionPoint}
-                  />
-                );
-              })}
-            </QuestionSection>
-
-            {/* COLLECTION DATE */}
-            <QuestionSection text="Collection Date:">
-              <div className="flex-1 mx-auto">
-                <DayPicker
-                  mode="single"
-                  className=""
-                  selected={collectionDate}
-                  // fromDate={getNextOrderWed()}
-                  disabled={(day) => blockedMatcher(day, [], selectedCollectionPoint, locations)}
-                  required={true}
-                  onSelect={(date) =>
-                    setCollectionDateFromInput(
-                      setCollectionDate,
-                      date as Date,
-                      collectionDate,
-                      setSelectedCollectionPoint,
-                      setDateInPast
-                    )
-                  }
-                  modifiersClassNames={{
-                    selected: "!bg-green-800 !text-white",
-                    hover: "!bg-green-300 !text-white"
-                  }}
-                />
-                {dateInPast && (
-                  <span className="block text-beetroot font-bold text-center">
-                    Date is in past - is this intentional?
-                  </span>
-                )}
+            {/* DELIVERY SLOT */}
+            <div className="mb-6">
+              <h3 className="text-lg font-bold mb-3">Delivery Day</h3>
+              <div className="flex gap-2">
+                {(["thursday", "friday", "saturday"] as DeliverySlot[]).map((slot) => (
+                  <button
+                    key={slot}
+                    type="button"
+                    className={`px-4 py-2 border-2 rounded-md capitalize text-sm transition-colors ${
+                      selectedDeliverySlot === slot
+                        ? "border-green-700 bg-green-50"
+                        : "border-gray-300"
+                    }`}
+                    onClick={() => setSelectedDeliverySlot(slot)}
+                  >
+                    {slot}
+                  </button>
+                ))}
               </div>
-            </QuestionSection>
+            </div>
+
+            {/* DELIVERY ADDRESS */}
+            <div className="mb-6">
+              <h3 className="text-lg font-bold mb-3">Delivery Address</h3>
+              <div className="flex flex-col gap-2">
+                <input
+                  type="text"
+                  className="border border-gray-300 rounded-md p-2 text-sm"
+                  placeholder="Address line 1"
+                  value={deliveryAddress.line1}
+                  onChange={(e) => setDeliveryAddress((a) => ({ ...a, line1: e.target.value }))}
+                />
+                <input
+                  type="text"
+                  className="border border-gray-300 rounded-md p-2 text-sm"
+                  placeholder="Address line 2 (optional)"
+                  value={deliveryAddress.line2}
+                  onChange={(e) => setDeliveryAddress((a) => ({ ...a, line2: e.target.value }))}
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    className="border border-gray-300 rounded-md p-2 text-sm flex-1"
+                    placeholder="City"
+                    value={deliveryAddress.city}
+                    onChange={(e) => setDeliveryAddress((a) => ({ ...a, city: e.target.value }))}
+                  />
+                  <input
+                    type="text"
+                    className="border border-gray-300 rounded-md p-2 text-sm w-32 uppercase"
+                    placeholder="Postcode"
+                    value={deliveryAddress.postcode}
+                    onChange={(e) => setDeliveryAddress((a) => ({ ...a, postcode: e.target.value.toUpperCase() }))}
+                  />
+                </div>
+              </div>
+            </div>
             <label htmlFor="status" className="flex flex-col text-2xl font-bold mb-5">
               <span className="mb-3">Status</span>
               <select
@@ -603,15 +586,16 @@ const OrderModal: React.FC<{
             </label>
 
             {/* ORDER NOTES */}
-            <QuestionSection text="Order Notes:">
+            <div className="mb-5">
+              <h3 className="text-lg font-bold mb-2">Order Notes</h3>
               <textarea
-                className="flex-1 bg-white max-w-full w-[32rem] xl:w-[36rem] p-2 border-2 border-chickpea focus:outline-mangetout rounded-md"
+                className="flex-1 bg-white w-full p-2 border border-gray-300 rounded-md text-sm"
                 placeholder="Anything else we should know?"
-                rows={4}
+                rows={3}
                 value={orderNotes}
                 onChange={(e) => setOrderNotes(e.target.value)}
               />
-            </QuestionSection>
+            </div>
             {errorMessage && (
               <div className="flex flex-row justify-end gap-3">
                 <span className="text-beetroot flex-1 text-center py-2 px-3 border border-beetroot rounded-md">
@@ -707,8 +691,7 @@ const LocationOrderTable: React.FC<{
   );
 };
 
-const ProductDisplay: NextPage<OrderProps> = ({ blockedDates, locations, upcomingOrderDates }) => {
-  const router = useRouter();
+const ProductDisplay: NextPage<OrderProps> = ({ upcomingOrderDates }) => {
   const { user } = useUser({ redirectTo: "/login" });
 
   // const today = new Date();
@@ -760,7 +743,7 @@ const ProductDisplay: NextPage<OrderProps> = ({ blockedDates, locations, upcomin
       headers.append("Accept", "application/json");
       headers.append("Cookie", JSON.stringify(getCookies()) || "");
       const clientSideOrders: Order[] = await fetchJson(
-        `/api/admin/get-orders?collectionDate=${selectedDate.getTime()}`,
+        `/api/admin/get-orders?deliveryDate=${selectedDate.getTime()}`,
         { headers }
       );
       setClientSideOrders(clientSideOrders);
@@ -768,33 +751,21 @@ const ProductDisplay: NextPage<OrderProps> = ({ blockedDates, locations, upcomin
     })();
   }, [selectedDate, lastRefresh]);
 
-  const educatoriumOrders = clientSideOrders.filter((o) =>
-    o.collectionLocation.toLowerCase().includes("educatorium")
-  );
-  const parnassosOrders = clientSideOrders.filter((o) =>
-    o.collectionLocation.toLowerCase().includes("parnassos")
-  );
-  const vmaOrders = clientSideOrders.filter((o) =>
-    o.collectionLocation.toLowerCase().includes("vening")
-  );
+  const thursdayOrders = clientSideOrders.filter((o) => o.deliverySlot === "thursday");
+  const fridayOrders = clientSideOrders.filter((o) => o.deliverySlot === "friday");
+  const saturdayOrders = clientSideOrders.filter((o) => o.deliverySlot === "saturday");
 
   if (!user?.isLoggedIn || !user?.isAdmin) return null;
 
-  const userEmails = clientSideOrders
-    .map((o) => o.user?.email)
-    .filter((e: string | undefined): e is string => !!e);
-  const parnassosEmails = parnassosOrders
-    .map((o) => o.user?.email)
-    .filter((e: string | undefined): e is string => !!e);
-  const educatoriumEmails = educatoriumOrders
-    .map((o) => o.user?.email)
-    .filter((e: string | undefined): e is string => !!e);
-  const uniqueEmails = [...new Set(userEmails)];
-  const uniqueParnassosEmails = [...new Set(parnassosEmails)];
-  const uniqueEducatoriumEmails = [...new Set(educatoriumEmails)];
+  const allEmails = [...new Set(clientSideOrders.map((o) => o.user?.email).filter((e): e is string => !!e))];
+
   const copyEmails = (emails: string[]) => {
-    console.log("copying emails");
     navigator.clipboard.writeText(emails.join("\r\n"));
+  };
+
+  const downloadCsv = () => {
+    const url = `/api/admin/export-csv?deliveryDate=${selectedDate.getTime()}`;
+    window.location.href = url;
   };
 
   const isCustomDate = !upcomingOrderDates?.summary.collectionDates
@@ -808,7 +779,6 @@ const ProductDisplay: NextPage<OrderProps> = ({ blockedDates, locations, upcomin
           setShowOrderModal={setShowOrderModal}
           refreshList={refreshList}
           selectedOrder={selectedOrder}
-          locations={locations}
         />
       )}
       <div className="flex justify-between items-start mb-8">
@@ -818,7 +788,7 @@ const ProductDisplay: NextPage<OrderProps> = ({ blockedDates, locations, upcomin
 
           {/* Sidebar */}
           <div className="flex-initial flex flex-col gap-1 p-1 bg-potato border-2 border-sweetcorn rounded-lg mt-4">
-            <small className="text-xs pt-1 px-2 pb-0">Collection Dates</small>
+            <small className="text-xs pt-1 px-2 pb-0">Delivery Dates</small>
             <div className="flex gap-1 min-h-[2.5rem]">
               {upcomingOrderDates?.summary.collectionDates.map((date) => {
                 return (
@@ -871,17 +841,21 @@ const ProductDisplay: NextPage<OrderProps> = ({ blockedDates, locations, upcomin
           <div className="flex items-center justify-center gap-3">
             <button
               className="flex flex-row items-center justify-center text-sm gap-2 px-4 py-2 bg-sweetcorn border-2 border-sweetcorn rounded-lg"
-              onClick={() => {
-                setShowOrderModal(true);
-              }}
+              onClick={() => setShowOrderModal(true)}
             >
               Add New Order
+            </button>
+            <button
+              className="flex flex-row items-center justify-center text-sm gap-2 px-4 py-2 border-2 border-sweetcorn rounded-lg"
+              onClick={downloadCsv}
+              title="Download DHL CSV for this delivery date"
+            >
+              Export CSV
             </button>
             <button
               className="flex-initial block text-soil h-12 p-2 relative"
               onClick={() => setShowDropdown(!showDropdown)}
             >
-              {/* Three dots menu icon */}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6"
@@ -899,19 +873,7 @@ const ProductDisplay: NextPage<OrderProps> = ({ blockedDates, locations, upcomin
                 }`}
               >
                 <li className="flex flex-col items-start px-4 py-3 text-left whitespace-nowrap">
-                  <button onClick={() => copyEmails(uniqueEmails)}>Copy All Emails</button>
-                  <button
-                    className="pt-3 border-t border-sweetcorn mt-3"
-                    onClick={() => copyEmails(uniqueParnassosEmails)}
-                  >
-                    Copy Parnassos Emails
-                  </button>
-                  <button
-                    className="pt-3 border-t border-sweetcorn mt-3"
-                    onClick={() => copyEmails(uniqueEducatoriumEmails)}
-                  >
-                    Copy Educatorium Emails
-                  </button>
+                  <button onClick={() => copyEmails(allEmails)}>Copy All Emails</button>
                 </li>
               </ul>
             </button>
@@ -922,21 +884,10 @@ const ProductDisplay: NextPage<OrderProps> = ({ blockedDates, locations, upcomin
       {/* Widgets */}
       <div className="flex mb-8">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-          {selectedDate < NEW_ORDER_FORMAT_DATE ? (
-            <>
-              <LegacyTotalsWidget title={"Parnassos"} orders={parnassosOrders} />
-              <LegacyTotalsWidget title={"Educatorium"} orders={educatoriumOrders} />
-              <LegacyTotalsWidget title={"VMA"} orders={vmaOrders} />
-              <LegacyTotalsWidget title={"Total"} orders={clientSideOrders} />
-            </>
-          ) : (
-            <>
-              <TotalsWidget title={"Parnassos"} orders={parnassosOrders} />
-              <TotalsWidget title={"Educatorium"} orders={educatoriumOrders} />
-              <TotalsWidget title={"VMA"} orders={vmaOrders} />
-              <TotalsWidget title={"Total"} orders={clientSideOrders} />
-            </>
-          )}
+          <TotalsWidget title={"Thursday"} orders={thursdayOrders} />
+          <TotalsWidget title={"Friday"} orders={fridayOrders} />
+          <TotalsWidget title={"Saturday"} orders={saturdayOrders} />
+          <TotalsWidget title={"Total"} orders={clientSideOrders} />
         </div>
       </div>
 
@@ -947,12 +898,13 @@ const ProductDisplay: NextPage<OrderProps> = ({ blockedDates, locations, upcomin
             <div className="sticky z-10 top-14 text-sm bg-rainwater grid-cols-12 sm:grid px-5 font-bold pb-2">
               <div className="sm:col-span-2 h-6">Name</div>
               <div className="sm:col-span-2 h-6">Product</div>
-              <div className="h-6 text-center">Quantity</div>
+              <div className="h-6 text-center">Qty</div>
               <div className="sm:col-span-2 h-6 text-center">Ordered on</div>
               <div className="text-right pr-2 h-6">Source</div>
               <div className="text-right pr-2 h-6">Total</div>
               <div className="text-center -mr-6 h-6">Status</div>
-              <div className="text-right -mr-4 h-6">Collected</div>
+              <div className="h-6">Delivery</div>
+              <div className="text-center -mr-4 h-6">Done</div>
               <div className="text-right h-6">Edit</div>
             </div>
             {isLoading && (
@@ -963,29 +915,32 @@ const ProductDisplay: NextPage<OrderProps> = ({ blockedDates, locations, upcomin
               </div>
             )}
             <LocationOrderTable
-              title="Educatorium"
-              orders={educatoriumOrders}
+              title="Thursday"
+              orders={thursdayOrders}
               editOrder={editOrder}
               showCancelled={showCancelled}
               setShowCancelled={setShowCancelled}
               setOrderCollected={setOrderCollected}
             />
             <LocationOrderTable
-              title="Parnassos"
-              orders={parnassosOrders}
+              title="Friday"
+              orders={fridayOrders}
               editOrder={editOrder}
               showCancelled={showCancelled}
               setShowCancelled={setShowCancelled}
               setOrderCollected={setOrderCollected}
             />
             <LocationOrderTable
-              title="VMA"
-              orders={vmaOrders}
+              title="Saturday"
+              orders={saturdayOrders}
               editOrder={editOrder}
               showCancelled={showCancelled}
               setShowCancelled={setShowCancelled}
               setOrderCollected={setOrderCollected}
             />
+            {thursdayOrders.length === 0 && fridayOrders.length === 0 && saturdayOrders.length === 0 && !isLoading && (
+              <div className="px-5 py-8 text-center text-gray-400">No orders for this date.</div>
+            )}
           </div>
         </div>
       </div>
@@ -993,56 +948,22 @@ const ProductDisplay: NextPage<OrderProps> = ({ blockedDates, locations, upcomin
   );
 };
 
-export const getServerSideProps = withIronSessionSsr(async ({ req, res }) => {
+export const getServerSideProps = withIronSessionSsr(async ({ req }) => {
   if (!req.session.user?.isLoggedIn)
-    return {
-      redirect: {
-        destination: "/login",
-        permanent: false
-      }
-    };
+    return { redirect: { destination: "/login", permanent: false } };
   if (!req.session.user.isAdmin)
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false
-      }
-    };
+    return { redirect: { destination: "/", permanent: false } };
 
-  const headers = new Headers();
-  headers.append("Content-Type", "application/json");
-  headers.append("Accept", "application/json");
-  headers.append("Cookie", req?.headers.cookie || "");
-
-  const blockedDates = await fetchJson(`${process.env.APP_URL}/api/get-blocked-dates`, {
-    headers
-  });
-
-  let upcomingOrderDates: Order[] = [];
+  let upcomingOrderDates: any = { summary: { collectionDates: [] }, orders: [] };
   try {
     upcomingOrderDates = await getNextOrderDates();
   } catch (error) {
     console.error("Error fetching upcoming order dates:", error);
-    // throw new Error("Failed to fetch upcoming order dates");
   }
-
-  const client = createClient({
-    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
-    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
-    apiVersion: "2021-10-21",
-    token: process.env.SANITY_BOT_TOKEN,
-    useCdn: false
-  });
-  const language = getCookies({ req, res })["groentetas/lang"] || "en-gb";
-
-  const query = `*[_type == "location" &&  __i18n_lang == "${language}" && !(_id in path('drafts.**'))]`;
-  const locations = await client.fetch(query);
 
   return {
     props: {
       user: req.session.user,
-      blockedDates,
-      locations,
       upcomingOrderDates
     }
   };

@@ -10,61 +10,40 @@ const getUpcomingOrders: NextApiHandler = async (
   req: NextApiRequestWithDB,
   res: NextApiResponse
 ) => {
-  // if (!req.session.user || !req.session.user.isLoggedIn) {
-  //   res.status(401).send("Unauthorized");
-  //   return;
-  // }
-  //
-  // if (!req.session.user.isLoggedIn || !req.session.user?.isAdmin) {
-  //   res.status(401).send("Unauthorized");
-  //   return;
-  // }
-
-  let collectionDate = new Date();
-  collectionDate.setHours(0, 0, 0, 0);
-  const collectionDateSeconds = collectionDate.getTime() / 1000;
-  const range = [collectionDateSeconds, collectionDateSeconds + 14 * 24 * 60 * 60];
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const startMs = now.getTime();
+  const endMs = startMs + 14 * 24 * 60 * 60 * 1000;
 
   Model.knex(req.db);
   const orders = await Order.query()
     .select("orders.*", "users.firstName as userFirstName", "users.lastName as userLastName")
     .innerJoin("users", "orders.userId", "users.id")
-    .whereBetween("collectionDate", range as [number, number])
+    .whereBetween("deliveryDate", [startMs, endMs])
     .withGraphFetched("user")
     .orderBy("userFirstName", "asc");
 
-  const collectionDates = new Set(
-    orders.map(
-      (order) =>
-        new Date(new Date(order.collectionDate * 1000).setHours(9, 0, 0, 0))
-          .toISOString()
-          .split("T")[0] // Format to YYYY-MM-DD
-    )
+  const deliveryDates = new Set(
+    orders.map((order) => new Date(Number(order.deliveryDate)).toISOString().split("T")[0])
   );
 
   const summary = {
     totalOrders: orders.length,
     totalUsers: new Set(orders.map((order) => order.userId)).size,
-    totalCollectionDates: collectionDates.size,
-    collectionDates: Array.from(collectionDates)
+    totalCollectionDates: deliveryDates.size,
+    collectionDates: Array.from(deliveryDates)
       .sort()
       .map((date) => {
-        const dateObj = new Date(new Date(date).setHours(9, 0, 0, 0));
         const dateOrders = orders.filter(
-          (order) => new Date(order.collectionDate * 1000).toISOString().split("T")[0] === date
+          (order) => new Date(Number(order.deliveryDate)).toISOString().split("T")[0] === date
         );
         return {
-          date: dateObj.toISOString().split("T")[0], // Format to YYYY-MM-DD
+          date,
           count: dateOrders.length,
           split: dateOrders.reduce((acc, order) => {
-            let locationName = (order.collectionLocation as string).split(" ")[0];
-            if (locationName === "Vening") {
-              locationName = "VMA";
-            }
-            if (!acc[locationName]) {
-              acc[locationName] = 0;
-            }
-            acc[locationName]++;
+            const slot = order.deliverySlot || "unknown";
+            if (!acc[slot]) acc[slot] = 0;
+            acc[slot]++;
             return acc;
           }, {} as Record<string, number>)
         };
