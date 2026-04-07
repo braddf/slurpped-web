@@ -62,10 +62,10 @@ export default function Layout({
                   {item.overrideTitle || item.title}
                 </Link>
               ))}
-              <div className="socials flex gap-4 mt-2">
-                <a href="#" aria-label="Instagram">Instagram</a>
-                <a href="#" aria-label="TikTok">TikTok</a>
-              </div>
+              {/*<div className="socials flex gap-4 mt-2">*/}
+              {/*  <a href="#" aria-label="Instagram">Instagram</a>*/}
+              {/*  <a href="#" aria-label="TikTok">TikTok</a>*/}
+              {/*</div>*/}
             </div>
             <div className="flex flex-col items-end lg:items-start start gap-2 py-8">
               <Link href={"/info/terms-of-use"}>Terms of Use</Link>
