@@ -75,7 +75,7 @@ export default function Login() {
             {message}
           </b>
         )}
-        <h1 className="text-xl font-bold mb-6">Log in</h1>
+        <h1 className="text-5xl text-soil mb-1">Log in</h1>
         {emailSent && (
           <b className="block mb-8 px-4 py-3 text-center rounded-xl border-2 border-carrot border-dashed">
             Login link sent to your email. <br />

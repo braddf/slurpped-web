@@ -482,7 +482,7 @@ const OrderModal: React.FC<{
                       <div className="flex flex-col">
                         <span className="font-medium text-sm">{product.name}</span>
                         <span className="text-xs text-gray-500">
-                          €{(product.priceInPence / 100).toFixed(2)}
+                          £{(product.priceInPence / 100).toFixed(2)}
                         </span>
                       </div>
                       {isSelected && (

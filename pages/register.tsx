@@ -71,7 +71,7 @@ export default function Register() {
     return (
       <div>
         <div className="max-w-xs sm:max-w-sm mx-auto mt-24 mb-32">
-          <h1 className="text-xl font-bold mb-6">Sign Up</h1>
+          <h1 className="text-5xl text-soil mb-1">Sign Up</h1>
           <b className="block mb-8 px-4 py-3 text-center rounded-xl border-2 border-carrot border-dashed">
             Login link sent to your email. <br />
             Please check your inbox and follow the link to complete your registration.
@@ -89,7 +89,7 @@ export default function Register() {
             {message}
           </b>
         )}
-        <h1 className="text-xl font-bold mb-6">Sign Up</h1>
+        <h1 className="text-5xl text-soil mb-1">Sign Up</h1>
         {(!emailSent && (
           <Form errorMessage={errorMsg} register loading={loading} onSubmit={handleSubmit} />
         )) || (
